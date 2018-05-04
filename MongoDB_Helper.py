@@ -1,4 +1,4 @@
-__author__ = 'ck'
+author__ = 'ck'
 
 import sys
 import pymongo
@@ -11,162 +11,248 @@ from os import path
 sys.path.append( path.dirname( path.dirname( path.abspath(__file__) ) ) )
 #from mongodb_interface import mongodb_interface
 import json
+import math
 
-test_json = '{"glossary": {"title": "example glossary","GlossDiv": { "title": "S","GlossList": {"GlossEntry": {"ID": "SGML",	"SortAs": "SGML",					"GlossTerm": "Standard Generalized Markup Language",					"Acronym": "SGML",					"Abbrev": "ISO 8879:1986",					"GlossDef": {                        "para": "A meta-markup language, used to create markup languages such as DocBook.",						"GlossSeeAlso": ["GML", "XML"]                    },					"GlossSee": "markup"                }            }        }    }'
+uri1 = 'mongodb://Admin:qwerty123@ds261429.mlab.com:61429/textminingproject'
+uri2 ='mongodb://Admin:qwerty123@ds211440.mlab.com:11440/textminingprojectdf'
+from xml.dom import minidom
+import json
+import operator
 
-test_json = '{  "Reviews": {    "Review": [      {        "rid": "B0074703CM_108_ANONYMOUS",        "sentences": {          "sentence": [            {              "id": "B0074703CM_108_ANONYMOUS:0",              "text": "Well, my first apple computer and I am impressed.",              "Opinions": {                "Opinion": {                  "category": "LAPTOP#GENERAL",                  "polarity": "positive"                }              }            },            {              "id": "B0074703CM_108_ANONYMOUS:1",              "text": "Works well, fast and no reboots.",              "Opinions": {                "Opinion": {                  "category": "LAPTOP#OPERATION_PERFORMANCE",                  "polarity": "positive"                }              }            },            {              "id": "B0074703CM_108_ANONYMOUS:4",              "text": "Glad I did so far.",              "Opinions": {                "Opinion": [                  {                    "category": "COMPANY#GENERAL",                    "polarity": "positive"                  },                  {                    "category": "LAPTOP#GENERAL",                    "polarity": "positive"                  }                ]              }            },            {              "id": "B0074703CM_108_ANONYMOUS:5",              "text": "Laptop is good but gets heated very fast.",              "Opinions": {                "Opinion": [                  {                    "category": "laptop#quality",                    "polarity": "positive"                  },                  {                    "category": "laptop#operation_performance",                    "polarity": "positive"                  }                ]              }            }          ]        }      },      {        "rid": "B00GJUQ4Z0_10_ANONYMOUS",        "sentences": {          "sentence": [            {              "id": "B00GJUQ4Z0_10_ANONYMOUS:0",              "text": "s.... L .... o..... w.... rea......llllyy slow.",              "Opinions": {                "Opinion": {                  "category": "LAPTOP#OPERATION_PERFORMANCE",                  "polarity": "positive"                }              }            },            {              "id": "B00GJUQ4Z0_10_ANONYMOUS:1",              "text": "like seriously  really slow.",              "Opinions": {                "Opinion": {                  "category": "LAPTOP#OPERATION_PERFORMANCE",                  "polarity": "negative"                }              }            },            {              "id": "B00GJUQ4Z0_10_ANONYMOUS:2",              "text": "impossible to use.",              "Opinions": {                "Opinion": {                  "category": "LAPTOP#USABILITY",                  "polarity": "negative"                }              }            },            {              "id": "B00GJUQ4Z0_10_ANONYMOUS:3",              "text": "cant even read properly.",              "Opinions": {                "Opinion": {                  "category": "LAPTOP#USABILITY",                  "polarity": "negative"                }              }            },            {              "id": "B00GJUQ4Z0_10_ANONYMOUS:4",              "text": "plus  no russian input ?? wtf",              "Opinions": {                "Opinion": {                  "category": "LAPTOP#MISCELLANEOUS",                  "polarity": "negative"                }              }            }          ]        }      },      {        "rid": "B0146DD02G_18_ANONYMOUS",        "sentences": {          "sentence": [            {              "id": "B0146DD02G_18_ANONYMOUS:0",              "text": "What a great laptop, I can run my games and work really fast.",              "Opinions": {                "Opinion": [                  {                    "category": "LAPTOP#GENERAL",                    "polarity": "positive"                  },                  {                    "category": "LAPTOP#MISCELLANEOUS",                    "polarity": "positive"                  },                  {                    "category": "LAPTOP#OPERATION_PERFORMANCE",                    "polarity": "positive"                  }                ]              }            },            {              "id": "B0146DD02G_18_ANONYMOUS:1",              "text": "Really light you can carry with you everywhere.",              "Opinions": {                "Opinion": [                  {                    "category": "LAPTOP#DESIGN_FEATURES",                    "polarity": "positive"                  },                  {                    "category": "LAPTOP#PORTABILITY",                    "polarity": "positive"                  }                ]              }            },            {              "id": "B0146DD02G_18_ANONYMOUS:2",              "text": "Great battery life.",              "Opinions": {                "Opinion": {                  "category": "BATTERY#OPERATION_PERFORMANCE",                  "polarity": "positive"                }              }            },            {              "id": "B0146DD02G_18_ANONYMOUS:3",              "text": "Everything at a very great price.",              "Opinions": {                "Opinion": {                  "category": "LAPTOP#PRICE",                  "polarity": "positive"                }              }            },            {              "id": "B0146DD02G_18_ANONYMOUS:4",              "text": "I completely recommend it.",              "Opinions": {                "Opinion": {                  "category": "LAPTOP#GENERAL",                  "polarity": "positive"                }              }            }          ]        }      }    ]  } }'
+def XMLParser():
+    xmldoc = minidom.parse('ABSA16_Laptops_Train_SB1_v2.xml')
+    reviewList = xmldoc.getElementsByTagName('Review')
+    client = pymongo.MongoClient(uri1)
+    db = client.get_default_database()
+    db_name = db["TextMining"]
 
-
-test_json_new = '{  "Reviews": {    "Review": [      {        "rid": "B0074703CM_108_ANONYMOUS",        "sentences": {          "sentence": [            {              "id": "B0074703CM_108_ANONYMOUS:0",              "text": "Well, my first apple computer and I am impressed.",              "Opinions": {                "Opinion": {                  "category": "LAPTOP#GENERAL",                  "polarity": "positive"                }              }            },            {              "id": "B0074703CM_108_ANONYMOUS:1",              "text": "Works well, fast and no reboots.",              "Opinions": {                "Opinion": {                  "category": "LAPTOP#OPERATION_PERFORMANCE",                  "polarity": "positive"                }              }            },            {              "id": "B0074703CM_108_ANONYMOUS:4",              "text": "Glad I did so far.",              "Opinions": {                "Opinion": [                  {                    "category": "COMPANY#GENERAL",                    "polarity": "positive"                  },                  {                    "category": "LAPTOP#GENERAL",                    "polarity": "positive"                  }                ]              }            },            {              "id": "B0074703CM_108_ANONYMOUS:5",              "text": "Laptop is good but gets heated very fast.",              "Opinions": {                "Opinion": [                  {                    "category": "laptop#quality",                    "polarity": "positive"                  },                  {                    "category": "laptop#operation_performance",                    "polarity": "positive"                  }                ]              }            }          ]        }      },      {        "rid": "B00GJUQ4Z0_10_ANONYMOUS",        "sentences": {          "sentence": {            "id": "B00GJUQ4Z0_10_ANONYMOUS:0",            "text": "s.... L .... o..... w.... rea......llllyy slow.",            "Opinions": {              "Opinion": {                "category": "LAPTOP#OPERATION_PERFORMANCE",                "polarity": "positive"              }            }          }        }      }    ]  } }'
-
-uri = 'mongodb://Admin:qwerty123@ds261429.mlab.com:61429/textminingproject'
-
-class mongodb_helper():
-
-    def InsertDocuments(self,query_json_obj):
-        client = pymongo.MongoClient(uri)
-        db = client.get_default_database()
-        db_name = db["TextMining"]
-
-        
-        LoadedJson = json.loads(query_json_obj)['Reviews']['Review']
-        print LoadedJson
-        print type(LoadedJson)
-        #print RawJsonToJsonObj
-        #JsonObj = json.dumps(LoadedJson)
-
-        #print JsonObj['Review']
-        for review in LoadedJson:
-            #print "working with a tweet, bound to variable res3"
-            #print review.keys()
-            #print review
-            reviewID =  review['rid']
-            #print type(review)
-            sentences = review['sentences']
-            #print type(sentences)
-            
-            CompleteReview = ""
-            SetOfOpinions = []
-            
-            print "Type of sentence : " + str(type(sentences['sentence']))
-
-            if( type(sentences['sentence']) is dict ):
-                CompleteReview+= sentences['sentence']['text']
-                if(type(sentences['sentence']['Opinions']) is dict):
-                    Opinions = sentences['sentence']['Opinions']['Opinion']
-                    temp_tuple = tuple((Opinions['category'],Opinions['polarity']))
-                    if(temp_tuple not in SetOfOpinions):
-                        SetOfOpinions.append(temp_tuple)
-                else:
-                    ListOfopinions =  sentences['sentence']['Opinions']['Opinion']
-                    
-                    for eachOpinion in ListOfopinions:
-                        temp_tuple = tuple((eachOpinion['category'],eachOpinion['polarity']))
-                        if(temp_tuple not in SetOfOpinions):
-                            SetOfOpinions.append(temp_tuple)
-                print sentences['sentence']['Opinions']
-            else:   
-                for sentence in sentences['sentence']:
-                    if(type(sentence['Opinions']['Opinion']) is dict):
-                        #print sentence
-                        Opinions = sentence['Opinions']['Opinion']
-                        temp_tuple = tuple((Opinions['category'],Opinions['polarity']))
-                        if(temp_tuple not in SetOfOpinions):
-                            SetOfOpinions.append(temp_tuple)
-                        #print Opinions['category']
-                        #print Opinions['polarity']
-                    else:
-                        ListOfopinions =  sentence['Opinions']['Opinion']
-                        
-                        for eachOpinion in ListOfopinions:
-                            #print eachOpinion
-                            temp_tuple = tuple((eachOpinion['category'],eachOpinion['polarity']))
-                            #print temp_tuple
-                            if(temp_tuple not in SetOfOpinions):
-                                SetOfOpinions.append(temp_tuple)
-                            
-                    #print "Final Sentences"
-                    #print sentence['text']
-                    CompleteReview = CompleteReview + sentence['text'] + ' '
-            
-            print CompleteReview
-            print SetOfOpinions
-            print reviewID
-            ListToString = ','.join(map(str, SetOfOpinions))
-            print ListToString
-            s = '{"ReviewID":"' + reviewID + '","Review":"'+CompleteReview+'","Opinions":"'+ListToString+'"}'
-            json_obj = json.loads(s)
-            db_name.insert(json_obj)
-        client.close()
-
-    global_list_of_documents = []
-    def GetSimilarDocuments(self,query_opinions):
-        client = pymongo.MongoClient(uri)
-        db = client.get_default_database()
-        db_name = db["TextMining"]
-        
-        #query_string ='{ "$and" : [ {\"Opinions\" : {\'$regex\': \"(u\'LAPTOP#GENERAL\', u\'positive\')\"} },{\"Opinions\": {\'$regex\': \"(u\'LAPTOP#MISCELLANEOUS\', u\'positive\')\"} } ] }'
-        #json_obj = json.loads(query_string)
-        #print query_string
-
-        list_of_documents = []
-        for Opinion in query_opinions:
-            print Opinion
-            cursor = db_name.find( {"Opinions" : {'$regex': "(u'LAPTOP#GENERAL', u'positive')"} } )
-
-            for document in cursor:
-                if document not in list_of_documents:
-                    list_of_documents.append(document)
-                    #print "\n"
-                    #print document
-        
-        print list_of_documents
-        global global_list_of_documents 
-        global_list_of_documents = list_of_documents
-
-    global_list_of_top_documents = {}
-
-    def CosineSimilarity(self,query_opinions):
-        print "CK"
-        list_of_top_documents = {}
-        for document in global_list_of_documents:
-            cnt=0
-            for query in query_opinions:
-                if query in document['Opinions']:
-                    cnt+=1
-            print document
-            list_of_top_documents[document['ReviewID']] = cnt
-            if cnt == len(query_opinions):
-                print document
-
-        global global_list_of_top_documents
-        global_list_of_top_documents = list_of_top_documents
-        print global_list_of_top_documents
-
-#       cursor = db_name.find({"$and" : [ {"Opinions" : {'$regex': "(u'LAPTOP#GENERAL', u'positive')"} } ,                                         {"Opinions" : {'$regex': "(u'LAPTOP#MISCELLANEOUS', u'positive')"} } ] }          )
-        #cursor = db_name.find(json_obj)
+    client2 = pymongo.MongoClient(uri2)
+    db2 = client2.get_default_database()
+    db2_name = db2["TextMiningDF"]
     
-    def GetDocumentFromReviewID(self,reviewID):
-        client = pymongo.MongoClient(uri)
-        db = client.get_default_database()
-        db_name = db["TextMining"]
-        cursor = db_name.find( {"ReviewID" : reviewID } )
+    count_DF = {}
+    for review in reviewList:
+        reviewDict = dict()
+        rid = review.attributes['rid'].value
+        reviewText = ''
+        opinions = set()
+        count_TF = {}
+        sentenceList = review.getElementsByTagName('sentence')
+        unique_opinions = set()
+        for sentence in sentenceList:
+            textList = sentence.getElementsByTagName('text')
+            for text in textList:
+                for childNode in text.childNodes:
+                    reviewText += childNode.nodeValue + ' '
+            opinionList = review.getElementsByTagName('Opinion')
+            for opinion in opinionList:
+                
+                cat = opinion.attributes['category'].value
+                pol = opinion.attributes['polarity'].value
 
+                opinion = '('+cat+','+pol+')'
+                print opinion
+                opinions.add(opinion)
+                #TF
+                if count_TF.has_key(opinion):
+                    count = count_TF.get(opinion)
+                    count+=1
+                    count_TF[opinion] = count
+                else:
+                    count_TF[opinion] = 1
+                unique_opinions.add(opinion)
+            
+        #DF
+        for opinion in unique_opinions:
+            if count_DF.has_key(opinion):
+                count = count_DF.get(opinion)
+                count+=1
+                count_DF[opinion] = count
+            else:
+                count_DF[opinion] = 1
+                unique_opinions.add(opinion)
+            
+        opinionsWithCount = set()
+        #print opinions
+        #print count_TF
+        #print reviewText
+
+        for opinion in opinions:
+            count = count_TF[opinion]
+            opinionWithCount = opinion[:-1]+','+str(count)+')'
+            opinionsWithCount.add(opinionWithCount)
+        ListToString = ':'.join(map(str, opinionsWithCount))
+        reviewText = reviewText.strip()
+        reviewDict['Opinions'] = ListToString
+        reviewDict['Review'] = reviewText
+        reviewDict['ReviewID'] = rid
+        reviewJson = json.dumps(reviewDict, ensure_ascii=False)
+        json_obj = json.loads(reviewJson)
+        
+        #write code to save to mongoDB
+        db_name.insert(json_obj)
+        
+    for opinion in count_DF:
+        #print opinion,count_DF[opinion]
+        temp_string = '{"Opinion":"' + opinion + '", "DF" : "'+ str(count_DF[opinion]) +'"}'
+        json_obj = json.loads(temp_string)
+        db2_name.insert(json_obj)
+        
+    client.close()
+
+#global_list_of_documents = []
+def GetSimilarDocuments(query_opinions):
+    client = pymongo.MongoClient(uri1)
+    db = client.get_default_database()
+    db_name = db["TextMining"]
+    
+    list_of_documents = []
+    for Opinion in query_opinions:
+        #print Opinion[1:-1]
+        s = '{"Opinions" : {"$regex": "'+ Opinion[1:-1] +'"} }'
+        json_obj = json.loads(s)
+        cursor = db_name.find(json_obj)
+        #cursor = db_name.find( {"Opinions" : {'$regex': "(LAPTOP#GENERAL,positive)"} } )
         for document in cursor:
-            print document
-            return document
+            if document not in list_of_documents:
+                list_of_documents.append(document)
+                
+    #print list_of_documents
+    return list_of_documents
+
+def CalculateIDF():
+    client2 = pymongo.MongoClient(uri2)
+    db2 = client2.get_default_database()
+    db2_name = db2["TextMiningDF"]
+    
+    #DF
+    IDF_dict = {}
+    cursor_DF = db2_name.find({})
+    for document in cursor_DF:
+        IDF_dict[document['Opinion']]= float(1 + float(math.log(float(document['DF']))))
+    #print IDF_dict
+    return IDF_dict
+
+def CalculateTF(document):
+    TF_dict = {}
+
+    list_of_opinions = document['Opinions'].split(':')
+    for eachOpinion in list_of_opinions:
+        opinionCategory = '('+eachOpinion.split(',')[0][1:]+ ',' +eachOpinion.split(',')[1]+')'
+        polarity = eachOpinion.split(',')[-1][:-1]
+        TF_dict[opinionCategory] = polarity
+    #print TF_dict
+    return TF_dict
+
+def CosineSimilarity_TF_IDF(TF_values_Query,TF_values_document,IDF_values):
+    dotProd = 0.0
+    A = 0.0
+    B = 0.0
+    for Opinion in TF_values_Query:
+        if(TF_values_document.has_key(Opinion)):
+            dotProd+= (float(TF_values_document[Opinion])*float(IDF_values[Opinion])*float(TF_values_Query[Opinion])*float(IDF_values[Opinion]))
+
+	if(TF_values_Query.has_key(Opinion) and IDF_values.has_key(Opinion) ) :
+        	B += math.pow((float((TF_values_Query[Opinion])*float(IDF_values[Opinion]))),2)
+    
+    for Opinion in TF_values_document:
+	if(TF_values_document.has_key(Opinion) and IDF_values.has_key(Opinion) ) :
+        	A += math.pow((float(TF_values_document[Opinion])*float(IDF_values[Opinion])),2)
+
+    if(A==0 or B==0):
+        return 0
+
+    CosineSimilarity = float(dotProd/(math.sqrt(A)*math.sqrt(B)))
+    print CosineSimilarity
+    return CosineSimilarity
+    
+def CosineSimilarity(list_of_documents,query_opinions):
+    #print "CK"
+    list_of_top_documents = {}
+    ranked_results = []
+    for document in list_of_documents:
+        cnt=0
+        for query in query_opinions:
+            if query in document['Opinions']:
+                cnt+=1
+        list_of_top_documents[document['ReviewID']] = cnt
+        
+    sorted_list_of_top_documents = sorted(list_of_top_documents.items(), key=operator.itemgetter(1), reverse = True)
+    print sorted_list_of_top_documents
+    cnt=0
+    for Review in sorted_list_of_top_documents:
+        if cnt==5:
+            break
+        cnt+=1
+        ranked_results.append(GetDocumentFromReviewID(Review[0]))
+    return ranked_results
+
+
+
+
+def GetDocumentFromReviewID(reviewID):
+    client = pymongo.MongoClient(uri1)
+    db = client.get_default_database()
+    db_name = db["TextMining"]
+    cursor = db_name.find( {"ReviewID" : reviewID } )
+
+    for document in cursor:
+        print "\n"
+        print document
+        print "\n"
+        return document
+
+def CalculateTFQuery(opinion_categories):
+    count_TF={}
+    for opinion in opinion_categories:
+        #TF
+        if count_TF.has_key(opinion):
+            count = count_TF.get(opinion)
+            count+=1
+            count_TF[opinion] = count
+        else:
+            count_TF[opinion] = 1
+    return count_TF
+        
+def GetTopDocumentsTFIDF(query_opinions):
+    list_of_documents = GetSimilarDocuments(query_opinions)
+    IDF_values = CalculateIDF()
+    TF_values_Query = CalculateTFQuery(query_opinions)
+
+    CosineSimilarity_dict ={}
+
+    for document in list_of_documents:
+        TF_values_document = CalculateTF(document)
+        CosineSimilarity_document = CosineSimilarity_TF_IDF(TF_values_Query,TF_values_document,IDF_values)
+        CosineSimilarity_dict[document['ReviewID']] = CosineSimilarity_document
+
+    print CosineSimilarity_dict
+    sorted_list_of_top_documents = sorted(CosineSimilarity_dict.items(), key=operator.itemgetter(1), reverse = True)
+    print sorted_list_of_top_documents
+    cnt=0
+    for Review in sorted_list_of_top_documents:
+        print Review
+        if cnt==5:
+            break
+        cnt+=1
+        GetDocumentFromReviewID(Review[0])
 
 if __name__ == '__main__':
-    mdb_helper = mongodb_helper()
     #mdb_helper.InsertDocuments(test_json_new)
     #query_opinions = ["(u'LAPTOP#GENERAL', u'positive')","(u'LAPTOP#MISCELLANEOUS', u'positive')"]
-    #mdb_helper.GetSimilarDocuments(query_opinions)
-    #print mdb_helper.global_list_of_documents
-    #mdb_helper.CosineSimilarity(query_opinions)
-    mdb_helper.GetDocumentFromReviewID("B0074703CM_108_ANONYMOUS")
     
+
+    query_opinions = ["(LAPTOP#PRICE,positive)", "(LAPTOP#DESIGN_FEATURES,positive)","(HARD_DISC#DESIGN_FEATURES,positive)"]
+    list_of_documents = GetSimilarDocuments(query_opinions)
     
-    #print mdb_helper.get_points_data("rice_pt_soda")
-    #mdb_helper.recursive_file_read("pressure")
-    #print mdb_helper.get_timeseries_data("2 Mag CHW Return Temp")
+    GetTopDocumentsTFIDF(query_opinions)
+    
+    #CosineSimilarity_TF_IDF(list_of_documents,query_opinions)
+    #CosineSimilarity(list_of_documents,query_opinions)
+    #mdb_helper.GetDocumentFromReviewID("B0074703CM_108_ANONYMOUS")
+    
+    #Insert into MongoDB from XML
+    #XMLParser()
+    
+
 
