@@ -44,7 +44,7 @@ def XMLParser():
             for text in textList:
                 for childNode in text.childNodes:
                     reviewText += childNode.nodeValue + ' '
-            opinionList = review.getElementsByTagName('Opinion')
+            opinionList = sentence.getElementsByTagName('Opinion')
             for opinion in opinionList:
                 
                 cat = opinion.attributes['category'].value
@@ -152,7 +152,7 @@ def CosineSimilarity_TF_IDF(TF_values_Query,TF_values_document,IDF_values):
         if(TF_values_document.has_key(Opinion)):
             dotProd+= (float(TF_values_document[Opinion])*float(IDF_values[Opinion])*float(TF_values_Query[Opinion])*float(IDF_values[Opinion]))
 
-	if(TF_values_Query.has_key(Opinion) and IDF_values.has_key(Opinion) ) :
+	if(IDF_values.has_key(Opinion) ) :
         	B += math.pow((float((TF_values_Query[Opinion])*float(IDF_values[Opinion]))),2)
     
     for Opinion in TF_values_document:
@@ -160,6 +160,8 @@ def CosineSimilarity_TF_IDF(TF_values_Query,TF_values_document,IDF_values):
         	A += math.pow((float(TF_values_document[Opinion])*float(IDF_values[Opinion])),2)
 
     if(A==0 or B==0):
+	print "A:"+str(A)
+	print "B:"+str(B)
         return 0
 
     CosineSimilarity = float(dotProd/(math.sqrt(A)*math.sqrt(B)))
@@ -168,12 +170,12 @@ def CosineSimilarity_TF_IDF(TF_values_Query,TF_values_document,IDF_values):
     
 def CosineSimilarity(list_of_documents,query_opinions):
     #print "CK"
+    results = []
     list_of_top_documents = {}
-    ranked_results = []
     for document in list_of_documents:
         cnt=0
         for query in query_opinions:
-            if query in document['Opinions']:
+            if query[1:-1] in document['Opinions']:
                 cnt+=1
         list_of_top_documents[document['ReviewID']] = cnt
         
@@ -184,8 +186,8 @@ def CosineSimilarity(list_of_documents,query_opinions):
         if cnt==5:
             break
         cnt+=1
-        ranked_results.append(GetDocumentFromReviewID(Review[0]))
-    return ranked_results
+        results.append(GetDocumentFromReviewID(Review[0]))
+    return results
 
 
 
@@ -212,6 +214,7 @@ def CalculateTFQuery(opinion_categories):
             count_TF[opinion] = count
         else:
             count_TF[opinion] = 1
+    print count_TF
     return count_TF
         
 def GetTopDocumentsTFIDF(query_opinions):
@@ -219,6 +222,10 @@ def GetTopDocumentsTFIDF(query_opinions):
     IDF_values = CalculateIDF()
     TF_values_Query = CalculateTFQuery(query_opinions)
 
+    print "\nIDF Values:\n"
+    print IDF_values
+    print "\nTF Values:\n"
+    print TF_values_Query
     CosineSimilarity_dict ={}
 
     for document in list_of_documents:
@@ -230,19 +237,22 @@ def GetTopDocumentsTFIDF(query_opinions):
     sorted_list_of_top_documents = sorted(CosineSimilarity_dict.items(), key=operator.itemgetter(1), reverse = True)
     print sorted_list_of_top_documents
     cnt=0
+    results = []
     for Review in sorted_list_of_top_documents:
         print Review
         if cnt==5:
             break
         cnt+=1
-        GetDocumentFromReviewID(Review[0])
+        results.append(GetDocumentFromReviewID(Review[0]))
+    return results
 
 if __name__ == '__main__':
     #mdb_helper.InsertDocuments(test_json_new)
     #query_opinions = ["(u'LAPTOP#GENERAL', u'positive')","(u'LAPTOP#MISCELLANEOUS', u'positive')"]
     
 
-    query_opinions = ["(LAPTOP#PRICE,positive)", "(LAPTOP#DESIGN_FEATURES,positive)","(HARD_DISC#DESIGN_FEATURES,positive)"]
+    #query_opinions = ["(LAPTOP#PRICE,positive)", "(LAPTOP#DESIGN_FEATURES,positive)","(HARD_DISC#DESIGN_FEATURES,positive)"]
+    query_opinions = ['(DISPLAY#GENERAL,positive)', '(LAPTOP#GENERAL,positive)', '(BATTERY#OPERATION_PERFORMANCE,negative)']
     list_of_documents = GetSimilarDocuments(query_opinions)
     
     GetTopDocumentsTFIDF(query_opinions)

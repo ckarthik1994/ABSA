@@ -8,14 +8,19 @@ import acd_restaurants_test
 import re
 import MongoDB_Helper as MongoDB_Helper
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static')
 acd_laptops = acd_laptops_test.AspectCategoryClassifier()
 acd_restaurants = acd_restaurants_test.AspectCategoryClassifier()
 classifier = SentimentClassifier()
 
+
 class ItemTable(Table):
     reviewText = Col('Review Text')
     sentimentLabels = Col('Aspect Category Sentiments')
+
+@app.route('/<path:path>')
+def static_file(path):
+    return app.send_static_file(path)
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
@@ -23,13 +28,14 @@ def index():
     if request.method == 'POST':
         return search_results(search)
  
-    return render_template('index.html', form=search)
+    return render_template('search.html', form=search)
 
 @app.route('/results')
 def search_results(search):
     results = []
     search_string = search.data['search']
-    domain = search.data['select']
+    domain = search.data['selectDomain']
+    print(search.data)
     print(domain)
 
     if domain == 'lap':
@@ -44,11 +50,15 @@ def search_results(search):
     for i in range(0, len(categories)):
         cat = categories[i]
         pol = polarities[i]
-        item = "("+cat+","+pol+")"
+        item = "("+cat.upper()+","+pol.lower()+")"
         opinions.append(item)
 
-    search_results = MongoDB_Helper.GetSimilarDocuments(opinions)
-    ranked_results = MongoDB_Helper.CosineSimilarity(search_results,opinions)
+    method = search.data['selectMethod']
+    if method == "naive":
+        search_results = MongoDB_Helper.GetSimilarDocuments(opinions)
+        ranked_results = MongoDB_Helper.CosineSimilarity(search_results,opinions)
+    else:
+        ranked_results = MongoDB_Helper.GetTopDocumentsTFIDF(opinions)
 
     if len(ranked_results)==0:
         flash('No results found!')
@@ -60,10 +70,15 @@ def search_results(search):
         reviewContent = ranked_results[i]['Review']
         searchResultItems.append(dict(reviewText=reviewContent, sentimentLabels=opinions))
 
-    table = ItemTable(searchResultItems, border=1)
+    table = ItemTable(searchResultItems, border=1, classes=["resultsTable"])
     tableHTML = table.__html__()
 
-    responseHTML = '<html><head><title>ASQ - Aspect Sentiment Query</title></head><body><h2>ASQ us what you want ;)</h2>'+tableHTML+'</body></html>'
+    responseHTML = ""
+    with open ("templates/results.html", "r") as myfile:
+        responseHTML=myfile.readlines()
+
+    responseHTML = ''.join(responseHTML)
+    responseHTML = responseHTML.replace("$table$", tableHTML)
 
     return responseHTML
  

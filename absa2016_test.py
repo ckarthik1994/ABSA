@@ -74,7 +74,7 @@ class SentimentClassifier:
 			postags = nltk.pos_tag(tokens)
 			subsentence = ''
 			for postag in postags:
-				if postag[1]=='CC' and (postag[0].lower()=='or' or postag[0].lower()=='and' or postag[0].lower()=='but'):
+				if (postag[1]=='CC' and (postag[0].lower()=='or' or postag[0].lower()=='and' or postag[0].lower()=='but')) or (postag[1]=='IN' and postag[0].lower()=='with'):
 					subsentence = subsentence.strip()
 					subsentences.append(subsentence)
 					subsentence = ''
