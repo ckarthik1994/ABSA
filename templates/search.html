@@ -1,0 +1,66 @@
+<html>
+<head>
+    <title>ASQ - Aspect Sentiment Query</title>
+
+  <link rel="stylesheet" href="{{ url_for('static',filename='styles/style.css') }}">
+  <link href="https://fonts.googleapis.com/css?family=Anton|Fjalla+One" rel="stylesheet">
+
+</head>
+<body>
+  <!-- <div class="bgImage"></div> -->
+  <div class="header gradientClass">
+    <div class="logo">
+      <span>ASQ - Aspect Sentiment Query</span>
+    </div>
+  </div>
+
+<center>
+  <div class="searchLine">ASQ us anything ;)</div>
+  <form method=post>
+    <div class="inputWrapper">
+      <input type="text" class="inputClass" id="search" name="search"/>
+      <select class="selectClass1" id="selectDomain" name="selectDomain">
+        <option class="option" value="lap">Laptops</option>
+        <option class="option" value="rest">Restaurants</option>
+      </select>
+      <select class="selectClass2" id="selectMethod" name="selectMethod">
+        <option class="option" value="naive">Naive</option>
+        <option class="option" value="cosine">Cosine Distance</option>
+      </select>
+    </div>
+    <div>
+      <input type="submit" class="SearchBtn gradientClass" value="SEARCH"/>
+    </div>
+  </form>
+</center>
+
+
+
+</body>
+<!-- <h2>ASQ us what you want ;)</h2>
+
+
+  
+
+
+
+<form method=post>
+  <dl>
+    
+    <dt><label for="select">Select Domain:</label>
+    <dd><select id="select" name="select"><option value="lap">Laptops</option><option value="rest">Restaurants</option></select>
+    
+    </dd>
+
+    <p>
+    
+    <dt><label for="search"></label>
+    <dd><input id="search" name="search" type="text" value="">
+    
+    </dd>
+
+  </dl>
+  <p><input type=submit value=Search>
+</form> -->
+
+</html>
